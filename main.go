@@ -4,20 +4,14 @@ import (
 	"fmt"
 )
 
-func superAdd(numbers ...int) int {
-	total := 0
-	// one way of doing for loop
-	for i := 0; i < len(numbers); i++ {
-		fmt.Println(numbers[i])
+func canIDrink(age int) bool {
+	// an initialization statement to set up a local variable
+	if koreanAge := age + 2; koreanAge < 18 {
+		return false
 	}
-	// another way of doing for loop
-	for _, number := range numbers { // you can simply use number instead of _, number
-		total += number
-	}
-	return total
+	return true
 }
 
 func main() {
-	result := superAdd(1, 2, 3, 4, 5, 6)
-	fmt.Println(result)
+	fmt.Println(canIDrink(16))
 }
