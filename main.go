@@ -3,11 +3,16 @@ package main
 import (
 	"fmt"
 
-	accounts "github.com/sungjunleeee/learngo/acocunts"
+	"github.com/sungjunleeee/learngo/dict"
 )
 
 func main() {
-	account := accounts.NewAccount("jun")
-	account.Deposit(500)
-	fmt.Println(account)
+	// dict is not a reserved keyword
+	dictionary := dict.Dictionary{"first": "First word"}
+	definition, err := dictionary.Search("first")
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(definition)
+	}
 }
