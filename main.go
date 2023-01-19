@@ -5,11 +5,24 @@ import (
 )
 
 func canIDrink(age int) bool {
-	// an initialization statement to set up a local variable
-	if koreanAge := age + 2; koreanAge < 18 {
+	// you can also use initialization statement in switch like if else statement
+	// one way of using switch
+	switch age {
+	case 10:
+		return false
+	case 18:
+		return true
+	}
+	// another way of using switch
+	switch {
+	case age < 18:
+		return false
+	case age == 18:
+		return true
+	case age > 50:
 		return false
 	}
-	return true
+	return false
 }
 
 func main() {
