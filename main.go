@@ -5,16 +5,14 @@ import (
 	"strings"
 )
 
-func lenAndUpper(name string) (int, string) {
-	return len(name), strings.ToUpper(name)
-}
-
-func repeatMe(words ...string) {
-	fmt.Println(words)
+func lenAndUpper(name string) (length int, uppercase string) {
+	defer fmt.Println("I'm done") // defer is executed after the function is done
+	length = len(name)
+	uppercase = strings.ToUpper(name)
+	return // you still need return keyword
 }
 
 func main() {
-	repeatMe("nico", "lynn", "dal", "marl", "flynn")
 	totalLength, _ := lenAndUpper("nico")
 	fmt.Println(totalLength)
 }
