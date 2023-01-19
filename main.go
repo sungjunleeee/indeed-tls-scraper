@@ -3,9 +3,9 @@ package main
 import "fmt"
 
 func main() {
-	array := [5]string{"nico", "lynn", "dal"}
-	slice := []string{"nico", "lynn", "dal"}
-	slice = append(slice, "flynn") // new slice is returned from append
-	fmt.Println(slice)
-	fmt.Println(array)
+	// [key type]value type
+	nico := map[string]string{"name": "nico", "age": "12"}
+	for key, value := range nico {
+		fmt.Println(key, value)
+	}
 }
