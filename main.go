@@ -6,22 +6,25 @@ import (
 )
 
 func main() {
-	c := make(chan bool) // initialize channel
-	people := [2]string{"Jun", "Tim"}
+	c := make(chan string) // initialize channel
+	people := [5]string{"Jun", "Tim", "Comico", "Nico", "Flynn"}
 	for _, person := range people {
 		// run go routine with channel
 		go isSick(person, c)
 	}
-	// wait for the channel to return a value
-	fmt.Println(<-c)
-	fmt.Println(<-c)
+	fmt.Println("Waiting for messages")
+	for _, person := range people {
+		go isSick(person, c)
+	}
+	for i := 0; i < len(people); i++ {
+		fmt.Println(<-c)
+	}
 	// result := <-c
 	// fmt.Println(result)
 }
 
-func isSick(person string, c chan bool) {
+func isSick(person string, c chan string) {
 	time.Sleep(time.Second * 5)
-	fmt.Println(person)
 	// return value to channel
-	c <- true
+	c <- person + " is sick 🥵"
 }
