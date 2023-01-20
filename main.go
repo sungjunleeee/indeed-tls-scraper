@@ -1,30 +1,48 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"time"
+	"net/http"
 )
 
-func main() {
-	c := make(chan string) // initialize channel
-	people := [5]string{"Jun", "Tim", "Comico", "Nico", "Flynn"}
-	for _, person := range people {
-		// run go routine with channel
-		go isSick(person, c)
-	}
-	fmt.Println("Waiting for messages")
-	for _, person := range people {
-		go isSick(person, c)
-	}
-	for i := 0; i < len(people); i++ {
-		fmt.Println(<-c)
-	}
-	// result := <-c
-	// fmt.Println(result)
+type result struct {
+	url    string
+	status string
 }
 
-func isSick(person string, c chan string) {
-	time.Sleep(time.Second * 5)
-	// return value to channel
-	c <- person + " is sick 🥵"
+var errRequestFailed = errors.New("Request failed")
+
+func main() {
+	results := map[string]result{}
+	c := make(chan result)
+	urls := []string{
+		"https://www.airbnb.com/",
+		"https://www.google.com/",
+		"https://www.amazon.com/",
+		"https://www.reddit.com/",
+		"https://soundcloud.com/",
+		"https://www.facebook.com/",
+		"https://www.instagram.com/",
+		"https://academy.nomadcoders.co/",
+	}
+	for _, url := range urls {
+		go hitURL(url, c)
+	}
+	for range urls {
+		result := <-c
+		results[result.url] = result
+	}
+	for url, result := range results {
+		fmt.Println(url, result.status)
+	}
+}
+
+func hitURL(url string, c chan<- result) { // chan<- : send only channel
+	resp, err := http.Get(url)
+	status := "OK"
+	if err != nil || resp.StatusCode >= 400 {
+		status = "FAILED"
+	}
+	c <- result{url: url, status: status}
 }
