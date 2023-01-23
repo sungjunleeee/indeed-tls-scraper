@@ -29,17 +29,26 @@ type jobDetails struct {
 }
 
 func main() {
-	totalPages := 10 //getPages(baseURL)
-	jobs := []jobDetails{}
+	totalPages := getPages(baseURL)
 	c := make(chan []jobDetails)
 	for i := 0; i < totalPages; i++ {
 		go getPage(i, c)
 	}
+	file, err := os.Create("jobs.csv")
+	w := csv.NewWriter(file)
+	defer w.Flush()
+	headers := []string{"Link", "Title", "Location", "Salary", "Summary"}
+	err = w.Write(headers)
+	checkErr(err)
+
+	checkErr(err)
+	jobCounter := 0
 	for i := 0; i < totalPages; i++ {
-		jobs = append(jobs, <-c...)
+		jobs := <-c
+		jobCounter += len(jobs)
+		writeCSV(jobs, w)
 	}
-	writeCSV(jobs)
-	fmt.Println("Total", len(jobs), "job(s) exported")
+	fmt.Println("Total", jobCounter, "job(s) exported")
 }
 
 func getPage(pageNum int, mainChan chan<- []jobDetails) {
@@ -112,18 +121,7 @@ func extractJob(s *goquery.Selection, c chan<- jobDetails) {
 	}
 }
 
-func writeCSV(jobs []jobDetails) {
-	file, err := os.Create("jobs.csv")
-	checkErr(err)
-
-	w := csv.NewWriter(file)
-	defer w.Flush()
-
-	headers := []string{"Link", "Title", "Location", "Salary", "Summary"}
-
-	err = w.Write(headers)
-	checkErr(err)
-
+func writeCSV(jobs []jobDetails, w *csv.Writer) {
 	for _, job := range jobs {
 		jobSlice := []string{job.link, job.title, job.location, job.salary, job.summary}
 		err := w.Write(jobSlice)
