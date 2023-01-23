@@ -29,16 +29,21 @@ type jobDetails struct {
 }
 
 func main() {
-	totalPages := getPages(baseURL)
+	totalPages := 10 //getPages(baseURL)
 	jobs := []jobDetails{}
+	c := make(chan []jobDetails)
 	for i := 0; i < totalPages; i++ {
-		jobs = append(jobs, getPage(i)...)
+		go getPage(i, c)
+	}
+	for i := 0; i < totalPages; i++ {
+		jobs = append(jobs, <-c...)
 	}
 	writeCSV(jobs)
 	fmt.Println("Total", len(jobs), "job(s) exported")
 }
 
-func getPage(pageNum int) []jobDetails {
+func getPage(pageNum int, mainChan chan<- []jobDetails) {
+	c := make(chan jobDetails)
 	pageURL := baseURL + fmt.Sprint(pageNum*10)
 	fmt.Println("Requesting", pageURL)
 	resp, err := getRespWithTLS()
@@ -49,10 +54,14 @@ func getPage(pageNum int) []jobDetails {
 	checkErr(err)
 
 	jobs := []jobDetails{}
-	doc.Find(".jobsearch-LeftPane").Find(".job_seen_beacon").Each(func(i int, s *goquery.Selection) {
-		jobs = append(jobs, extractJob(s))
+	blocks := doc.Find(".jobsearch-LeftPane").Find(".job_seen_beacon")
+	blocks.Each(func(i int, s *goquery.Selection) {
+		go extractJob(s, c)
 	})
-	return jobs
+	for i := 0; i < blocks.Length(); i++ {
+		jobs = append(jobs, <-c)
+	}
+	mainChan <- jobs
 }
 
 // Request page with get method with tls credentials to avoid 403 error
@@ -80,7 +89,7 @@ func getRespWithTLS() (*cycletls.Response, error) {
 	return &res, err
 }
 
-func extractJob(s *goquery.Selection) jobDetails {
+func extractJob(s *goquery.Selection, c chan<- jobDetails) {
 	id, _ := s.Find(".jobTitle>a").Attr("id")
 	id = strings.Split(id, "_")[1]
 	title := s.Find(".jobTitle>a").Text()
@@ -92,7 +101,7 @@ func extractJob(s *goquery.Selection) jobDetails {
 		salary = "Not Specified"
 	}
 	summary := s.Find(".job-snippet>ul").Text()
-	return jobDetails{
+	c <- jobDetails{
 		id:       id,
 		title:    cleanString(title),
 		company:  cleanString(company),
