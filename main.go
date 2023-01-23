@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/Danny-Dasilva/CycleTLS/cycletls"
@@ -32,8 +34,8 @@ func main() {
 	for i := 0; i < totalPages; i++ {
 		jobs = append(jobs, getPage(i)...)
 	}
-	fmt.Println("Total Jobs:", len(jobs))
-	fmt.Println(jobs)
+	writeCSV(jobs)
+	fmt.Println("Total", len(jobs), "job(s) exported")
 }
 
 func getPage(pageNum int) []jobDetails {
@@ -47,7 +49,7 @@ func getPage(pageNum int) []jobDetails {
 	checkErr(err)
 
 	jobs := []jobDetails{}
-	doc.Find(".jobsearch-LeftPane").Find(".resultContent").Each(func(i int, s *goquery.Selection) {
+	doc.Find(".jobsearch-LeftPane").Find(".job_seen_beacon").Each(func(i int, s *goquery.Selection) {
 		jobs = append(jobs, extractJob(s))
 	})
 	return jobs
@@ -89,7 +91,7 @@ func extractJob(s *goquery.Selection) jobDetails {
 	if salary == "" {
 		salary = "Not Specified"
 	}
-	summary := s.Find(".jobCardShelfContainer").Text()
+	summary := s.Find(".job-snippet>ul").Text()
 	return jobDetails{
 		id:       id,
 		title:    cleanString(title),
@@ -98,6 +100,25 @@ func extractJob(s *goquery.Selection) jobDetails {
 		salary:   cleanString(salary),
 		summary:  cleanString(summary),
 		link:     "https://www.indeed.com/viewjob?jk=" + id,
+	}
+}
+
+func writeCSV(jobs []jobDetails) {
+	file, err := os.Create("jobs.csv")
+	checkErr(err)
+
+	w := csv.NewWriter(file)
+	defer w.Flush()
+
+	headers := []string{"Link", "Title", "Location", "Salary", "Summary"}
+
+	err = w.Write(headers)
+	checkErr(err)
+
+	for _, job := range jobs {
+		jobSlice := []string{job.link, job.title, job.location, job.salary, job.summary}
+		err := w.Write(jobSlice)
+		checkErr(err)
 	}
 }
 
